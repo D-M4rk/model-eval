@@ -127,7 +127,7 @@ In June, we ran an earlier version of this evaluation with the models available 
 
 ## Current recommendation: OpenAI GPT-5, OpenAI o4-mini, or Claude Sonnet 4
 
-```{r main-plot}
+```{r main-plot, dpi=300}
 are_eval |> 
   ggplot(aes(y = model, fill = score)) +
   geom_bar(position = "fill") +
@@ -166,7 +166,7 @@ _Thinking_ or _reasoning_ models are LLMs that attempt to solve tasks through st
 Most of the models we looked at here are reasoning models, or are capable of reasoning. The only models not designed for reasoning are GPT-4.1 and Claude Sonnet 4 with thinking disabled. The gpt-oss models can perform reasoning, but lack a dedicated reasoning mode.
 :::
 
-```{r price-plot}
+```{r price-plot, dpi=300}
 are_eval_summary <-
   are_eval |> 
   group_by(model, model_join) |> 
