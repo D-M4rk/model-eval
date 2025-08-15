@@ -5,9 +5,11 @@
 # Session Data files
 .RData
 .RDataTmp
+.DS_Store
 
 # User-specific files
 .Ruserdata
+.env
 
 # Example code in package build process
 *-Ex.R
@@ -35,6 +37,7 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+*.html
 
 # R Environment Variables
 .Renviron
@@ -47,3 +50,12 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Logs
+logs/
+
+
+# RDS and RDA files 
+*.rds
+*.rda
+
