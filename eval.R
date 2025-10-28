@@ -14,10 +14,23 @@ OPENAI_MODELS <-
     "gpt_5_nano" = "gpt-5-nano"
   )
 
-ANTHROPIC_MODEL <- "claude-sonnet-4-20250514"
+ANTHROPIC_MODELS <- 
+  c(
+    "claude-sonnet-4-20250514",
+    "claude-sonnet-4-5-20250929",
+    "claude-opus-4-1-20250805",
+    "claude-haiku-4-5-20251001"
+  ) |> 
+  set_names(
+    \(x) str_remove(x, "-\\d{4}\\d{2}\\d{2}$") |> str_replace_all("-", "_")
+  )
+
+GEMINI_MODELS <- 
+  c("gemini_2_5_pro" = "gemini-2.5-pro")
+
 SCORER_MODEL <- "claude-3-7-sonnet-latest"
 
-results_dir <- here::here("results_rds_2")
+results_dir <- here::here("results_rds")
 # -------------------------------------------------------------------------------------------------------
 
 vitals::vitals_log_dir_set("./logs")
@@ -52,22 +65,31 @@ model_eval <- function(model, filename = model, chat_fun, overwrite = TRUE, ...)
   write_rds(are_model, file = model_path)
 }
 
-iwalk(OPENAI_MODELS, model_eval, chat_fun = chat_openai)
+iwalk(OPENAI_MODELS, model_eval, chat_fun = chat_openai, base_url = "https://api.openai.com/v1/responses")
 
+# No thinking
 model_eval(
-  ANTHROPIC_MODEL, 
+  ANTHROPIC_MODELS, 
   filename = "sonnet_4", 
   chat_fun = chat_anthropic
 )
 
-model_eval(
-  c("sonnet_4_thinking" = ANTHROPIC_MODEL), 
-  filename = "sonnet_4_thinking",
+# Thinking
+iwalk(
+  ANTHROPIC_MODELS[4] |> set_names(paste0, "_thinking"),
+  model_eval,
   chat_fun = chat_anthropic, 
   api_args = list(
     thinking = list(type = "enabled", budget_tokens = 2000)
   )
 )
+
+# Gemini 
+model_eval(
+  GEMINI_MODELS, 
+  chat_fun = chat_google_gemini
+)
+
 
 # OpenAI OSS Models
 
