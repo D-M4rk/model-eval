@@ -22,9 +22,18 @@ library(fs)
 # Assumes more output than input
 # Based on ratios from eval
 COST_BLEND_INPUT_MULTIPLIER <- 1/3
+EXCLUDED_MODELS <- 
+  c(
+    "gpt_oss_120b",
+    "gpt_oss_20b",
+    "sonnet_4", # no thinking
+    "gpt_o3_mini",
+    "gpt_o4_mini",
+    "gpt_o1"
+  )
 
 tasks <- 
-  dir_ls("results_rds_2", glob = "*.rds") |>
+  dir_ls("results_rds", glob = "*.rds") |>
   set_names(\(x) path_ext_remove(basename(x))) |>
   map(read_rds) 
 
@@ -41,7 +50,10 @@ are_eval <-
     model = fct_recode(
       model, 
       `Claude Sonnet 4\n(No Thinking)` = "sonnet_4",
-      `Claude Sonnet 4\n(Thinking)` = "sonnet_4_thinking",
+      `Claude Sonnet 4` = "sonnet_4_thinking",
+      `Claude Sonnet 4.5` = "sonnet_4_5_thinking",
+      `Claude Opus 4.1` = "opus_4_1_thinking",
+      `Claude Haiku 4.5` = "haiku_4_5_thinking",
       `GPT-4.1` = "gpt_4_1",
       `o1` = "gpt_o1",
       `o3-mini` = "gpt_o3_mini",
@@ -57,15 +69,16 @@ are_eval <-
     score = fct_recode(
       score, 
       "Correct" = "C", "Partially Correct" = "P", "Incorrect" = "I"
-  )
-)
+      )
+    ) |> 
+  filter(!model_join %in% EXCLUDED_MODELS) 
 
 model_order <-
   are_eval$model  |> 
-  fct_collapse(
-    "Claude Sonnet 4" = 
-      c("Claude Sonnet 4\n(No Thinking)", "Claude Sonnet 4\n(Thinking)")
-  ) |> 
+  # fct_collapse(
+  #   "Claude Sonnet 4" = 
+  #     c("Claude Sonnet 4\n(No Thinking)", "Claude Sonnet 4\n(Thinking)")
+  # ) |> 
   levels()
 
 model_prices <-
@@ -73,6 +86,9 @@ model_prices <-
     ~Name,                  ~Input, ~Output, ~model_join,
     "Claude Sonnet 4",        3.00,   15.00,  "sonnet_4",
     "Claude Sonnet 4",        3.00,   15.00,  "sonnet_4_thinking",
+    "Claude Sonnet 4.5",      3.00,   15.00,  "sonnet_4_5_thinking",
+    "Claude Opus 4.1",        15.00,  75.00,  "opus_4_1",
+    "Claude Haiku 4.5",       1.00,   5.00,   "haiku_4_5_thinking",
     "o3",                    10.00,   40.00,  "gpt_o3",
     "o4-mini",                1.10,    4.40,  "gpt_o4_mini",
     "GPT-4.1",                2.00,    8.00,  "gpt_4_1",
@@ -147,13 +163,17 @@ are_eval |>
     title = "Model performance on R code generation",
     fill = "Score",
     subtitle = 
-      "OpenAI's newest model, GPT-5, performed the best, with o4-mini and o3 close behind."
+      "Claude Sonnet 4.5 and GPT-5, two of the newest\nmodels, performed the best."
   ) +
   theme_light() +
   theme(
     plot.subtitle = element_text(face = "italic"),
     legend.position = "bottom",
-    plot.margin = margin(r = 10)
+    plot.margin = margin(r = 10),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 15),
+    axis.text = element_text(size = 11.5),
+    legend.text = element_text(size = 12)
   ) 
 ```
 
@@ -184,21 +204,23 @@ are_eval_summary |>
   geom_point() +
   annotate(
     "text", 
-    x = -0.25, 
-    y = 0.63, 
+    x = -0.15, 
+    y = 0.675, 
     label = "High performing,\ninexpensive",
     hjust = 0,
     vjust = 0,
-    color = "#666666"
+    color = "#666666",
+    size = 4
   ) +
   annotate(
     "text", 
-    x = 8, 
+    x = 6.5, 
     y = 0.4, 
     label = "Lower performing,\nexpensive",
     hjust = 1,
     vjust = 0,
-    color = "#666666"
+    color = "#666666",
+    size = 4
   ) +
   geom_hline(
     yintercept = mean_correct, 
@@ -213,29 +235,37 @@ are_eval_summary |>
     alpha = 0.4
   ) +
   geom_label_repel(
-    aes(label = model), 
+    aes(label = model, fill = (model == "Claude Sonnet 4.5")), 
     force = 0.4, 
     seed = 5,
     nudge_x = 0.2,
     color = "#333333",
-    fill = "#f5f5f5",
-    size = 3
+    # fill = "#f5f5f5",
+    size = 4.2
   ) +
   scale_x_continuous(labels = scales::label_dollar()) +
-  scale_y_continuous(labels = scales::label_percent()) +
-  coord_cartesian(xlim = c(0, 8), ylim = c(0.4, 0.67)) +
+  scale_y_continuous(
+    labels = scales::label_percent(),
+    breaks = scales::breaks_width(0.05)
+  ) +
+  scale_fill_manual(values = c("#f5f5f5", "#e6edff")) +
+  coord_cartesian(xlim = c(0, 6.3), ylim = c(0.4, 0.7)) +
   labs(
     x = "Total cost",
     y = "Percent correct",
     title = "Model performance on R code generation vs. cost",
     subtitle = 
-      "Cost reflects the actual total charges incurred. gpt-oss-20b and gpt-oss-120b are technically\nfree to run, though you may need to pay to host them."
+      "Cost reflects the actual total charges incurred."
   ) +
   theme_light() + 
-  theme(plot.subtitle = element_text(face = "italic"))  
+  theme(
+    plot.subtitle = element_text(face = "italic"),
+    legend.position = "none",
+    axis.title = element_text(size = 14),
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12)
+  )  
 ```
-
-
 
 ::: {.callout-caution}
 ## Take token usage into account
