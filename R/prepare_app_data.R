@@ -18,13 +18,17 @@ tasks <- load_eval_results("results_rds")
 # Process evaluation data
 are_eval_full <- process_eval_data(tasks)
 
+# Extract only the columns needed for the app to minimize file size
+eval_data_minimal <- are_eval_full |>
+  select(model_join, model_display, score)
+
 # Compute cost data
 are_costs <- compute_cost_data(tasks, model_prices)
 
-# Save to a single RDS file
+# Save to a single RDS file with minimal data
 readr::write_rds(
   list(
-    eval_data = are_eval_full,
+    eval_data = eval_data_minimal,
     cost_data = are_costs,
     model_prices = model_prices
   ),

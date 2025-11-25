@@ -4,9 +4,8 @@ library(shiny)
 library(bslib)
 library(gt)
 
-# Source helper functions
-source("R/data_loading.R")
-source("R/plotting.R")
+# Source helper functions (plotting and data helpers)
+source("R/helpers.R")
 
 # Load Data ------------------------------------------------------------------
 

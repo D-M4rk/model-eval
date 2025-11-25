@@ -1,9 +1,50 @@
-# Plotting Functions for Shiny App
+# Helper Functions for Shiny App
 # ============================================================================
 
 library(ggplot2)
 library(ggrepel)
 library(scales)
+library(dplyr)
+library(forcats)
+
+# Data Helper Functions ------------------------------------------------------
+
+#' Get list of available models for selection
+#'
+#' @param eval_data Processed evaluation data
+#' @return Tibble with model_display and model_join columns
+get_available_models <- function(eval_data) {
+  eval_data |>
+    distinct(model_display, model_join) |>
+    arrange(model_display)
+}
+
+#' Compute summary statistics for selected models
+#'
+#' @param eval_data Processed evaluation data
+#' @param cost_data Cost data
+#' @param selected_models Character vector of model_join IDs
+#' @return Tibble with summary statistics per model
+compute_summary_stats <- function(eval_data, cost_data, selected_models) {
+  eval_data |>
+    filter(model_join %in% selected_models) |>
+    group_by(model_display, model_join) |>
+    summarize(
+      total_samples = n(),
+      correct = sum(score == "Correct"),
+      partially_correct = sum(score == "Partially Correct"),
+      incorrect = sum(score == "Incorrect"),
+      percent_correct = correct / total_samples,
+      .groups = "drop"
+    ) |>
+    left_join(
+      cost_data |> select(model_join, price, input, output),
+      by = "model_join"
+    ) |>
+    arrange(desc(percent_correct))
+}
+
+# Plotting Functions ---------------------------------------------------------
 
 #' Create performance bar chart
 #'

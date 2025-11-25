@@ -128,6 +128,9 @@ compute_summary_stats <- function(eval_data, cost_data, selected_models) {
       percent_correct = correct / total_samples,
       .groups = "drop"
     ) |>
-    left_join(cost_data |> select(model_join, price, input, output), by = "model_join") |>
+    left_join(
+      cost_data |> select(model_join, price, input, output),
+      by = "model_join"
+    ) |>
     arrange(desc(percent_correct))
 }
