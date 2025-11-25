@@ -1,3 +1,8 @@
+.posit/
+__pycache__/
+archive/
+Claude.md
+
 # History files
 .Rhistory
 .Rapp.history
@@ -55,7 +60,12 @@ rsconnect/
 logs/
 
 
-# RDS and RDA files 
+# RDS and RDA files
 *.rds
 *.rda
+
+# renv
+renv/library/
+renv/staging/
+renv/local/
 
