@@ -4,23 +4,17 @@ library(shiny)
 library(bslib)
 library(gt)
 
-# Source helper functions
-source("R/data_loading.R")
-source("R/plotting.R")
+# Source helper functions (plotting and data helpers)
+source("R/helpers.R")
 
 # Load Data ------------------------------------------------------------------
 
-# Load model prices
-model_prices <- load_model_prices("data/model_prices.yaml")
+# Load pre-processed eval data
+app_data <- readr::read_rds("data/app_data.rds")
 
-# Load evaluation results
-tasks <- load_eval_results("results_rds")
-
-# Process evaluation data
-are_eval_full <- process_eval_data(tasks)
-
-# Compute cost data
-are_costs <- compute_cost_data(tasks, model_prices)
+are_eval_full <- app_data$eval_data
+are_costs <- app_data$cost_data
+model_prices <- app_data$model_prices
 
 # Get available models
 available_models <- get_available_models(are_eval_full)
