@@ -19,7 +19,6 @@ are_task <- Task$new(
 model_eval <- function(
   model,
   filename = model,
-  chat_fun,
   overwrite = TRUE,
   ...
 ) {
@@ -30,7 +29,7 @@ model_eval <- function(
     return(invisible(NULL))
   }
 
-  chat <- chat_fun(model = model, ...)
+  chat <- chat(name = model, ...)
 
   are_model <- are_task$clone()
   are_model$eval(solver_chat = chat)
