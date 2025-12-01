@@ -41,7 +41,7 @@ models:
 
   - name: "GPT-5.1"
     model_id: "gpt_5_1"
-    input_price: 2.50
+    input_price: 1.25
     output_price: 10.00
 
   - name: "o1"
