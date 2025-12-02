@@ -17,8 +17,8 @@ model_info <- load_model_info("data/model_info.yaml")
 # Load evaluation results
 tasks <- load_eval_results("results_rds")
 
-# Process evaluation data
-are_eval_full <- process_eval_data(tasks)
+# Process evaluation data using model_info for name mapping
+are_eval_full <- process_eval_data(tasks, model_info)
 
 # Extract only the columns needed for the app to minimize file size
 eval_data_minimal <- are_eval_full |>

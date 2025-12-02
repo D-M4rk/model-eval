@@ -6,10 +6,10 @@ library(vitals)
 library(fs)
 library(yaml)
 
-#' Load model info (pricing and provider) from YAML file
+#' Load model info (pricing, provider, and release date) from YAML file
 #'
 #' @param yaml_path Path to model_info.yaml file
-#' @return A tibble with columns: Name, model_join, provider, Input, Output
+#' @return A tibble with columns: Name, model_join, provider, release_date, Input, Output
 load_model_info <- function(yaml_path = "data/model_info.yaml") {
   prices_raw <- read_yaml(yaml_path)
 
@@ -19,6 +19,7 @@ load_model_info <- function(yaml_path = "data/model_info.yaml") {
         Name = model$name,
         model_join = model$model_id,
         provider = model$provider,
+        release_date = model$release_date,
         Input = model$input_price,
         Output = model$output_price
       )
@@ -38,8 +39,14 @@ load_eval_results <- function(results_dir = "results_rds") {
 #' Process evaluation data into tidy format
 #'
 #' @param tasks Named list of Task objects from load_eval_results()
-#' @return Tibble with columns: model_raw, model_join, model_display, score, etc.
-process_eval_data <- function(tasks) {
+#' @param model_info Model info tibble from load_model_info()
+#' @return Tibble with columns: model_join, model_display, score, etc.
+process_eval_data <- function(tasks, model_info) {
+  # Extract model name mapping from model_info
+  model_lookup <- model_info |>
+    select(model_id = model_join, display_name = Name) |>
+    deframe()
+
   tasks |>
     imap(
       \(x, idx) {
@@ -50,26 +57,13 @@ process_eval_data <- function(tasks) {
     list_rbind() |>
     mutate(
       model_join = model_raw,
-      model_display = fct_recode(
-        model_raw,
-        `Claude Sonnet 4 (No Thinking)` = "sonnet_4",
-        `Claude Sonnet 4` = "sonnet_4_thinking",
-        `Claude Sonnet 4.5` = "sonnet_4_5_thinking",
-        `Claude Opus 4.1` = "opus_4_1_thinking",
-        `Claude Haiku 4.5` = "haiku_4_5_thinking",
-        `GPT-4.1` = "gpt_4_1",
-        `GPT-5.1` = "gpt_5_1",
-        `o1` = "gpt_o1",
-        `o3-mini` = "gpt_o3_mini",
-        `o3` = "gpt_o3",
-        `o4-mini` = "gpt_o4_mini",
-        `GPT-5` = "gpt_5",
-        `GPT-5 mini` = "gpt_5_mini",
-        `GPT-5 nano` = "gpt_5_nano",
-        `gpt-oss-20b` = "gpt_oss_20b",
-        `gpt-oss-120b` = "gpt_oss_120b",
-        `Gemini 3` = "gemini_3"
-      ),
+      # Use the lookup table from model_info.yaml
+      model_display = if_else(
+        model_raw %in% names(model_lookup),
+        model_lookup[model_raw],
+        model_raw # fallback to raw if not in YAML
+      ) |>
+        as.factor(),
       score = fct_recode(
         score,
         "Correct" = "C",
