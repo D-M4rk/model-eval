@@ -1,7 +1,6 @@
 ---
 title: "Which AI model writes the best R code?"
 author: "Sara Altman, Simon Couch"
-format: gfm
 execute: 
     echo: false
     warning: false
@@ -16,110 +15,45 @@ library(vitals)
 library(gt)
 library(ggrepel)
 library(fs)
+library(yaml)
 ```
 
 ```{r setup}
-# Assumes more output than input
-# Based on ratios from eval
-COST_BLEND_INPUT_MULTIPLIER <- 1 / 3
-EXCLUDED_MODELS <-
+source(here::here("eval/data_loading.R"))
+
+# Models to include in blog analysis
+INCLUDED_MODELS <-
   c(
-    "gpt_oss_120b",
-    "gpt_oss_20b",
-    "sonnet_4", # no thinking
-    "gpt_o3_mini",
-    "gpt_o4_mini",
-    "gpt_o1"
+    "opus_4_5",
+    "sonnet_4_5_thinking",
+    "gpt_5",
+    "gemini_3",
+    "sonnet_4_thinking",
+    "opus_4_1_thinking",
+    "gpt_5_1"
   )
 
-tasks <-
-  dir_ls(here::here("results_rds"), glob = "*.rds") |>
-  set_names(\(x) path_ext_remove(basename(x))) |>
-  map(read_rds)
+model_info <- load_model_info(here::here("data/model_info.yaml"))
+tasks <- load_eval_results(here::here("results_rds"))
 
 are_eval <-
-  tasks |>
-  imap(
-    \(x, idx) {
-      vitals_bind(x) |>
-        mutate(model = idx)
-    }
-  ) |>
-  list_rbind() |>
+  process_eval_data(tasks, model_info) |>
+  filter(model_join %in% INCLUDED_MODELS) |>
   mutate(
-    model_join = model,
     model = fct_recode(
-      model,
-      `Claude Sonnet 4\n(No Thinking)` = "sonnet_4",
-      `Claude Sonnet 4` = "sonnet_4_thinking",
-      `Claude Sonnet 4.5` = "sonnet_4_5_thinking",
-      `Claude Opus 4.1` = "opus_4_1_thinking",
-      `Claude Haiku 4.5` = "haiku_4_5_thinking",
-      `GPT-4.1` = "gpt_4_1",
-      `o1` = "gpt_o1",
-      `o3-mini` = "gpt_o3_mini",
-      `o3` = "gpt_o3",
-      `o4-mini` = "gpt_o4_mini",
-      `GPT-5` = "gpt_5",
-      `GPT-5 mini` = "gpt_5_mini",
-      `GPT-5 nano` = "gpt_5_nano",
-      `gpt-oss-20b` = "gpt_oss_20b",
-      `gpt-oss-120b` = "gpt_oss_120b"
+      model_display,
+      `Claude Sonnet 4\n(No Thinking)` = "Claude Sonnet 4 (No Thinking)"
     ),
-    model = fct_reorder(model, score, .fun = \(x) sum(x == "C", na.rm = TRUE)),
-    score = fct_recode(
+    model = fct_reorder(
+      model,
       score,
-      "Correct" = "C",
-      "Partially Correct" = "P",
-      "Incorrect" = "I"
+      .fun = \(x) sum(x == "Correct", na.rm = TRUE)
     )
-  ) |>
-  filter(!model_join %in% EXCLUDED_MODELS)
-
-model_order <-
-  are_eval$model |>
-  # fct_collapse(
-  #   "Claude Sonnet 4" =
-  #     c("Claude Sonnet 4\n(No Thinking)", "Claude Sonnet 4\n(Thinking)")
-  # ) |>
-  levels()
-
-model_prices <-
-  tribble(
-    ~Name               , ~Input , ~Output , ~model_join           ,
-    "Claude Sonnet 4"   ,  3.00  , 15.00   , "sonnet_4"            ,
-    "Claude Sonnet 4"   ,  3.00  , 15.00   , "sonnet_4_thinking"   ,
-    "Claude Sonnet 4.5" ,  3.00  , 15.00   , "sonnet_4_5_thinking" ,
-    "Claude Opus 4.1"   , 15.00  , 75.00   , "opus_4_1"            ,
-    "Claude Haiku 4.5"  ,  1.00  ,  5.00   , "haiku_4_5_thinking"  ,
-    "o3"                , 10.00  , 40.00   , "gpt_o3"              ,
-    "o4-mini"           ,  1.10  ,  4.40   , "gpt_o4_mini"         ,
-    "GPT-4.1"           ,  2.00  ,  8.00   , "gpt_4_1"             ,
-    "o1"                , 15.00  , 60.00   , "gpt_o1"              ,
-    "o3-mini"           ,  1.10  ,  4.40   , "gpt_o3_mini"         ,
-    "GPT-5"             ,  1.25  , 10.00   , "gpt_5"               ,
-    "GPT-5 mini"        ,  0.25  ,  2.00   , "gpt_5_mini"          ,
-    "GPT-5 nano"        ,  0.05  ,  0.40   , "gpt_5_nano"          ,
-    "gpt-oss-20b"       ,  0.00  ,  0.00   , "gpt_oss_20b"         ,
-    "gpt-oss-120b"      ,  0.00  ,  0.00   , "gpt_oss_120b"
-  ) |>
-  arrange(desc(match(Name, model_order)))
+  )
 
 are_costs <-
-  tasks |>
-  imap(\(x, idx) x$get_cost() |> mutate(model_join = idx)) |>
-  list_rbind() |>
-  filter(source != "scorer") |>
-  mutate(price = str_extract(price, "\\d+\\.\\d+") |> as.double()) |>
-  left_join(model_prices, by = "model_join") |>
-  mutate(
-    price = if_else(
-      is.na(price),
-      input * Input / 1e6 + output * Output / 1e6,
-      price
-    )
-  ) |>
-  select(model = Name, model_id = model, model_join, input, output, price)
+  compute_cost_data(tasks, model_info) |>
+  filter(model_join %in% INCLUDED_MODELS)
 
 are_cost_summary <-
   are_costs |>
@@ -136,14 +70,23 @@ are_cost_summary <-
   )
 ```
 
+## Compare model performance in Shiny app
 
-**LLMs can now help you write R code. There are many available models, so which one should you pick?**
+In a series of past blog posts, we evaluated how well various models generate R code. To do so, we used the [vitals package](https://vitals.tidyverse.org/), a framework for LLM evaluation. vitals contains functions for measuring the effectiveness of an LLM, as well as `are`, a dataset of challenging R coding problems and their solutions. We evaluated model performance on this set of coding problems. 
 
-We evaluated how well various models generate R code. To do so, we used the [vitals package](https://vitals.tidyverse.org/), a framework for LLM evaluation. vitals contains functions for measuring the effectiveness of an LLM, as well as a dataset of challenging R coding problems and their solutions. We evaluated model performance on this set of coding problems. 
+Since we started this series, there has been a proliferation of new models. **To help keep this evaluation up-to-date, we created a Shiny app to visualize results.** Going forward, we'll add new results to this app. The app lets you select and compare any of the models we've evaluated on both performance and cost. You can see the app [here](https://skaltman-model-eval-app.share.connect.posit.cloud). 
 
-In June, we ran an earlier version of this evaluation with the models available at the time. You can read that blog post [here](https://posit.co/blog/r-llm-evaluation/). If you're interested in Python code generation, we also evaluated how well various models perform on [Pandas code generation](https://posit.co/blog/python-llm-evaluation/). 
+![](images/app.png)
 
-## Current recommendation: OpenAI GPT-5, OpenAI o4-mini, or Claude Sonnet 4
+We'll summarize current results in this post, but check out the app to create your own custom comparisons.
+
+<!--
+:::{.callout-tip}
+If you're interested in Python code generation, we also evaluated how well various models perform on [Pandas code generation](https://posit.co/blog/python-llm-evaluation/). 
+:::
+-->
+
+## Current recommendation: Claude Sonnet 4.5, Claude Opus 4.5, or OpenAI GPT-5
 
 ```{r main-plot, dpi=300}
 are_eval |>
@@ -176,14 +119,7 @@ are_eval |>
   )
 ```
 
-**For R coding tasks, we recommend using OpenAI's GPT-5 or o4-mini or Claude Sonnet 4.** OpenAI’s o3 also scored well, but its cost was roughly ten times higher than o4-mini and about four times higher than GPT-5. Claude Sonnet 4 remains a competitive option for R code generation. Anecdotally, many R programmers seem to prefer Claude Sonnet to OpenAI's models.
-
-::: {.callout-note}
-## Reasoning vs. non-reasoning models
-_Thinking_ or _reasoning_ models are LLMs that attempt to solve tasks through structured, step-by-step processing rather than just pattern-matching.  
-
-Most of the models we looked at here are reasoning models, or are capable of reasoning. The only models not designed for reasoning are GPT-4.1 and Claude Sonnet 4 with thinking disabled. The gpt-oss models can perform reasoning, but lack a dedicated reasoning mode.
-:::
+**For R coding tasks, we recommend using Claude Sonnet 4.5, Claude Opus 4.5, or OpenAI GPT-5.** Gemini 3 Pro, Google Gemini's latest model, also scored well. Notably, Claude Sonnet 4.5, released in September, shows marked improvements over version 4. 
 
 ```{r price-plot, dpi=300}
 are_eval_summary <-
@@ -198,7 +134,6 @@ mean_price <- mean(are_eval_summary$price)
 
 are_eval_summary |>
   mutate(model = str_replace(model, "\n", " ")) |>
-  # filter(!model %in% c("gpt-oss-120b", "gpt-oss-20b")) |>
   ggplot(aes(price, percent_correct)) +
   geom_point() +
   annotate(
@@ -234,7 +169,10 @@ are_eval_summary |>
     alpha = 0.4
   ) +
   geom_label_repel(
-    aes(label = model, fill = (model == "Claude Sonnet 4.5")),
+    aes(
+      label = model,
+      fill = (model %in% c("Claude Sonnet 4.5", "GPT-5", "Claude Opus 4.5"))
+    ),
     force = 0.4,
     seed = 5,
     nudge_x = 0.2,
@@ -267,63 +205,91 @@ are_eval_summary |>
 
 ::: {.callout-caution}
 ## Take token usage into account
-A **token** is the fundamental unit of data that an LLM can process (for text processing, a token is approximately a word). Different models use different amounts of tokens, and reasoning models typically generate significantly more output tokens than non-reasoning models. As a result, a model that is inexpensive on a per-token basis can, in practice, cost much more if it produces longer outputs. 
+A **token** is the fundamental unit of data that an LLM can process (for text processing, a token is approximately a word). Different models use vastly different amounts of tokens. As a result, a model that is inexpensive on a per-token basis can, in practice, cost much more if it produces longer outputs. 
 
-In our evaluation, however, the models that generated the most tokens (GPT-5, GPT-5 nano, and o4-mini) were still among the least expensive overall.
+The above plot shows the actual costs incurred during the evaluation so it takes token count and per token cost into account. 
 :::
 
 ## Key insights
 
-* **OpenAI's GPT-5, o4-mini, and o3 are the current best performers on the set of R coding tasks.**
+* **Claude Opus 4.5, Claude Sonnet 4.5, and OpenAI GPT-5 are the current best performers on the set of R coding tasks.**
 
-    The GPT-5 family of models (released August 2025) are the newest models evaluated. 
+    These models represent some of the latest model releases from the major AI labs. 
 
-* **OpenAI's newer models performed much better than its older models, GPT-4.1, o1, and o3-mini.**
+    Claude Opus 4.5 (released November 2025) and Claude Sonnet 4.5 (released September 2025) show significant improvements over their predecessors. However, OpenAI's most recent release GPT-5.1 (November 2025) performed worse than GPT-5.^[[GPT-5.1 Codex](https://platform.openai.com/docs/models/gpt-5.1-codex), which is not shown here but can be seen in the [app](https://skaltman-model-eval-app.share.connect.posit.cloud), performed substantially better than GPT-5.1.]
 
-* **Claude Sonnet 4 remains a reliable choice for R code generation**. On this evaluation, Claude Sonnet 4 performed slightly better with thinking enabled. 
+* **Gemini 3, Google Gemini's latest model, also performed well.** It is slightly more expensive than our top three recommendations. 
 
-## What about the open source models?
-
-OpenAI recently released two open-weight models, gpt-oss-120b and gpt-oss-20b, which can be run locally or deployed on a platform like Hugging Face.
-
-If you already work with open-weight models or have a specific reason to do so, these models, especially gpt-oss-120b, may be worth exploring. However, if your primary criterion is performance, they are unlikely to be the best choice compared to the top paid models.
-
-Also, although open-weight models are technically free to use, you may still need to host them somewhere, which can incur significant costs.
+* **Claude models show consistent improvement across versions**. Claude Sonnet 4.5 notably outperforms version 4 (released May 2025), and Opus 4.5 is cheaper and performed better than Opus 4.1. 
 
 ## Pricing
 
-LLM pricing is typically provided per million tokens. In our evaluation process, each model used between `r are_cost_summary$min_input` and `r are_cost_summary$max_input` input tokens and between `r are_cost_summary$min_output` and `r are_cost_summary$max_output` output tokens. The entire analysis cost around $`r round(are_cost_summary$total_cost, 0)`.
-
-As noted above, although the gpt-oss models are free to use, you may need to pay to host them if you are unable to run them locally. 
+LLM pricing is typically provided per million tokens. In our evaluation process, each model used between `r are_cost_summary$min_input` and `r are_cost_summary$max_input` input tokens and between `r are_cost_summary$min_output` and `r are_cost_summary$max_output` output tokens. 
 
 ```{r pricing-table}
-model_prices |>
-  left_join(are_costs, by = "model_join") |>
-  mutate(
-    Name = case_when(
-      model_join == "sonnet_4_thinking" ~ "Claude Sonnet 4 (Thinking)",
-      model_join == "sonnet_4" ~ "Claude Sonnet 4 (No Thinking)",
-      .default = Name
-    ),
-    price = round(price, 2)
+# Calculate summary stats for the table
+are_eval_summary_table <-
+  are_eval |>
+  group_by(model, model_join) |>
+  summarize(
+    percent_correct = sum(score == "Correct") / n(),
+    .groups = "drop"
+  )
+
+# Create table matching app format
+are_eval_summary_table |>
+  left_join(
+    are_costs |> select(model_join, price, input, output),
+    by = "model_join"
   ) |>
+  left_join(model_info, by = "model_join") |>
+  arrange(desc(percent_correct)) |>
   select(
-    Name,
-    Input,
-    Output,
-    `Actual cost` = price,
-    `Input tokens used` = input,
-    `Output tokens used` = output
+    Model = model,
+    `Input (per 1M tokens)` = Input,
+    `Output (per 1M tokens)` = Output,
+    `Input Tokens Used` = input,
+    `Output Tokens Used` = output,
+    `Total Cost` = price,
+    `% Correct` = percent_correct
   ) |>
+  mutate(Model = str_replace(Model, "\n", " ")) |>
   gt() |>
-  fmt_currency(columns = c(Input, Output, `Actual cost`), currency = "USD") |>
+  fmt_currency(
+    columns = c(
+      `Input (per 1M tokens)`,
+      `Output (per 1M tokens)`,
+      `Total Cost`
+    ),
+    currency = "USD",
+    decimals = 2
+  ) |>
   fmt_number(
-    columns = c(`Input tokens used`, `Output tokens used`),
-    decimals = 0
+    columns = c(`Input Tokens Used`, `Output Tokens Used`),
+    decimals = 0,
+    use_seps = TRUE
+  ) |>
+  fmt_percent(
+    columns = `% Correct`,
+    decimals = 1
+  ) |>
+  cols_align(
+    align = "left",
+    columns = everything()
   ) |>
   tab_header(
-    title = "Model costs, in order of eval performance",
-    subtitle = "Input and Output costs are per 1 million tokens. 'Actual cost' reflects total charges for running the evaluation."
+    title = "Model Pricing and Performance Details",
+    subtitle = "Sorted by percent correct (descending)"
+  ) |>
+  data_color(
+    columns = `% Correct`,
+    palette = c("#ef8a62", "#f6e8c3", "#6caea7"),
+    domain = NULL
+  ) |>
+  data_color(
+    columns = `Total Cost`,
+    palette = c("#e8f4f8", "#a8d5e2", "#6baed6", "#3182bd", "#08519c"),
+    domain = NULL
   )
 ```
 
@@ -334,4 +300,4 @@ model_prices |>
 * We tested each model on a shared benchmark: the `are` dataset ("**A**n **R** **E**val"). `are` contains a collection of difficult R coding problems and a column, `target`, with information about the target solution.  
 * Using vitals, we had each model solve each problem in `are`. Then, we scored their solutions using a scoring model (Claude 3.7 Sonnet). Each solution received either an Incorrect, Partially Correct, or Correct score. 
 
-You can see all the code used to evaluate the models [here](https://github.com/skaltman/model-eval-r/blob/99b405a40b6b5f12ed03eba6d1f6d3d20620cd84/eval.R). If you'd like to see a more in-depth analysis, check out Simon Couch's series of [blog posts](https://www.simonpcouch.com/blog/), which this post is based on, including [Claude 4 and R Coding](https://www.simonpcouch.com/blog/2025-05-27-claude-4/). 
+You can see all the code used to evaluate the models [here](https://github.com/skaltman/model-eval/tree/main/eval). If you'd like to see a more in-depth analysis, check out Simon Couch's series of [blog posts](https://www.simonpcouch.com/blog/), which this post is based on, including [Claude 4 and R Coding](https://www.simonpcouch.com/blog/2025-05-27-claude-4/). 
