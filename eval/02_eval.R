@@ -42,5 +42,5 @@ model_eval(
 # Gemini 2.5 Pro
 model_eval(
   model = "google_gemini/gemini-2.5-pro",
-  filename = "gemini-2_5"
+  filename = "gemini_2_5"
 )
