@@ -126,7 +126,7 @@ models:
     output_price: 0.00
 
   - name: "Gemini 2.5 Pro"
-    model_id: "gemini_2_5_pro"
+    model_id: "gemini_2_5"
     provider: "Google"
     release_date: "2025-06-17"
     input_price: 1.25
