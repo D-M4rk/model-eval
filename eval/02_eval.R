@@ -12,27 +12,6 @@ source(here::here("eval/helper.R"))
 
 scorer_chat <- chat_anthropic(model = SCORER_MODEL)
 
-model_eval_2 <- function(
-  model,
-  filename = model,
-  overwrite = TRUE,
-  ...
-) {
-  model_path <- fs::path(results_dir, filename, ext = "rds")
-
-  if (!overwrite & fs::file_exists(model_path)) {
-    message(glue::glue("Skipping {model}: file already exists at {model_path}"))
-    return(invisible(NULL))
-  }
-
-  chat <- chat(name = model, ...)
-
-  are_model <- are_task$clone()
-  are_model$eval(solver_chat = chat)
-
-  readr::write_rds(are_model, file = model_path)
-}
-
 # Gemini 3
 model_eval(
   model = "google_gemini/gemini-3-pro-preview",
@@ -55,7 +34,13 @@ model_eval(
 )
 
 # GPT-5 Codex
-model_eval_2(
+model_eval(
   model = "openai/gpt-5.1-codex",
   filename = "gpt_5_1_codex"
+)
+
+# Gemini 2.5 Pro
+model_eval(
+  model = "google_gemini/gemini-2.5-pro",
+  filename = "gemini-2_5"
 )
