@@ -33,4 +33,4 @@ app_data <- list(
   model_info = model_info
 )
 
-readr::write_rds(app_data, "data/app_data.rds")
+readr::write_rds(app_data, "data/data_combined.rds")
