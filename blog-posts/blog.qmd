@@ -11,11 +11,8 @@ knitr:
 
 ```{r libraries}
 library(tidyverse)
-library(vitals)
 library(gt)
 library(ggrepel)
-library(fs)
-library(yaml)
 ```
 
 ```{r setup}
