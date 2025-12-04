@@ -11,15 +11,13 @@ knitr:
 
 ```{r libraries}
 library(tidyverse)
-library(vitals)
 library(gt)
 library(ggrepel)
-library(fs)
-library(yaml)
 ```
 
 ```{r setup}
-source(here::here("eval/data_loading.R"))
+# Load pre-processed data
+app_data <- readr::read_rds(here::here("data/data_combined.rds"))
 
 # Models to include in blog analysis
 INCLUDED_MODELS <-
@@ -33,11 +31,9 @@ INCLUDED_MODELS <-
     "gpt_5_1"
   )
 
-model_info <- load_model_info(here::here("data/model_info.yaml"))
-tasks <- load_eval_results(here::here("results_rds"))
-
-are_eval <-
-  process_eval_data(tasks, model_info) |>
+# Extract data from app_data
+model_info <- app_data$model_info
+are_eval <- app_data$eval_data |>
   filter(model_join %in% INCLUDED_MODELS) |>
   mutate(
     model = fct_recode(
@@ -52,7 +48,7 @@ are_eval <-
   )
 
 are_costs <-
-  compute_cost_data(tasks, model_info) |>
+  app_data$cost_data |>
   filter(model_join %in% INCLUDED_MODELS)
 
 are_cost_summary <-
@@ -79,12 +75,6 @@ Since we started this series, there has been a proliferation of new models. **To
 ![](images/app.png)
 
 We'll summarize current results in this post, but check out the app to create your own custom comparisons.
-
-<!--
-:::{.callout-tip}
-If you're interested in Python code generation, we also evaluated how well various models perform on [Pandas code generation](https://posit.co/blog/python-llm-evaluation/). 
-:::
--->
 
 ## Current recommendation: Claude Sonnet 4.5, Claude Opus 4.5, or OpenAI GPT-5
 
