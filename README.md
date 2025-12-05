@@ -1,4 +1,4 @@
-# LLM R Code Generation Evaluation
+# Which LLM writes the best R code?
 
 This repository evaluates how well different AI models generate R code. The evaluation uses the `are` (**A**n **R** **E**val) dataset from the [vitals package](https://vitals.tidyverse.org/), which contains challenging R coding problems and solutions.
 
