@@ -11,7 +11,7 @@ This repository evaluates how well different AI models generate R code. The eval
 
 ## Blog posts
 
-There are also a series of accompanying blog posts which go into more depth about the analysis. Read the latest one: [Which AI model writes the best R code?](https://posit.co/blog/r-llm-evaluation/)
+There are also a series of accompanying blog posts which go into more depth about the analysis. Read the latest one: [Which AI model writes the best R code?](https://posit.co/blog/r-llm-evaluation-02/).
 
 ## Methodology
 
