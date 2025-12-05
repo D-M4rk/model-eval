@@ -153,7 +153,7 @@ ui <- page_navbar(
   nav_item(
     tags$a(
       shiny::icon("github", style = "font-size: 1.5em;"),
-      href = "https://github.com/skaltman/model-eval-app",
+      href = "https://github.com/skaltman/model-eval",
       target = "_blank"
     )
   )
