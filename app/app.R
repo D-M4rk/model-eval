@@ -103,7 +103,7 @@ ui <- page_navbar(
         nav_panel(
           "Performance",
           card(
-            card_header("Model Performance on R Code Generation"),
+            card_header("Score distribution by model"),
             card_body(
               plotOutput("performance_plot", height = "600px")
             )
@@ -113,7 +113,7 @@ ui <- page_navbar(
         nav_panel(
           "Cost vs. Performance",
           card(
-            card_header("Model Performance vs. Cost"),
+            card_header("Compare accuracy and total cost"),
             card_body(
               plotOutput("cost_plot", height = "600px")
             )
@@ -123,7 +123,6 @@ ui <- page_navbar(
         nav_panel(
           "Pricing Details",
           card(
-            card_header("Model Pricing and Token Usage"),
             card_body(
               class = "p-0",
               gt_output("pricing_table")
@@ -186,7 +185,8 @@ server <- function(input, output, session) {
     compute_summary_stats(
       are_eval_full,
       are_costs,
-      selected_models()
+      selected_models(),
+      model_info
     )
   })
 
