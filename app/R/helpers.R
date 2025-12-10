@@ -24,8 +24,14 @@ get_available_models <- function(eval_data) {
 #' @param eval_data Processed evaluation data
 #' @param cost_data Cost data
 #' @param selected_models Character vector of model_join IDs
+#' @param model_info Model metadata with provider information
 #' @return Tibble with summary statistics per model
-compute_summary_stats <- function(eval_data, cost_data, selected_models) {
+compute_summary_stats <- function(
+  eval_data,
+  cost_data,
+  selected_models,
+  model_info
+) {
   eval_data |>
     filter(model_join %in% selected_models) |>
     group_by(model_display, model_join) |>
@@ -39,6 +45,10 @@ compute_summary_stats <- function(eval_data, cost_data, selected_models) {
     ) |>
     left_join(
       cost_data |> select(model_join, price, input, output),
+      by = "model_join"
+    ) |>
+    left_join(
+      model_info |> select(model_join, provider),
       by = "model_join"
     ) |>
     arrange(desc(percent_correct))
@@ -91,7 +101,7 @@ plot_performance <- function(eval_data) {
 
 #' Create cost vs performance scatter plot
 #'
-#' @param summary_data Summary statistics with percent_correct and price columns
+#' @param summary_data Summary statistics with percent_correct, price, and provider columns
 #' @return ggplot object
 plot_cost_vs_performance <- function(summary_data) {
   # Convert factor to character for labeling
@@ -102,24 +112,54 @@ plot_cost_vs_performance <- function(summary_data) {
   mean_correct <- mean(plot_data$percent_correct, na.rm = TRUE)
   mean_price <- mean(plot_data$price, na.rm = TRUE)
 
-  ggplot(plot_data, aes(price, percent_correct)) +
-    geom_point(size = 5, color = "#2c3e50") +
+  # Add color column based on provider
+  plot_data <- plot_data |>
+    mutate(
+      color = case_when(
+        provider == "Anthropic" ~ "#be8bd4ff",
+        provider == "OpenAI" ~ "#80c8d3ff",
+        provider == "Google" ~ "#f6e8c3"
+      )
+    )
+
+  # Adjust min.segment.length based on number of models
+  n_models <- nrow(plot_data)
+  min_seg_length <- if_else(n_models < 10, 2, 0.5)
+
+  ggplot(plot_data, aes(price, percent_correct, color = provider)) +
+    geom_point(size = 5) +
     geom_label_repel(
-      aes(label = model_display),
+      aes(
+        label = model_display,
+        fill = alpha(color, 0.8),
+        segment.color = color
+      ),
       force = 3,
       max.overlaps = 20,
       size = 7,
-      fill = "#f5f5f5",
-      color = "#333333"
+      color = "#333333",
+      show.legend = FALSE,
+      min.segment.length = min_seg_length,
+      box.padding = 0.5
     ) +
+    scale_color_identity(aesthetics = "segment.color") +
+    scale_fill_identity() +
     scale_x_continuous(labels = label_dollar()) +
     scale_y_continuous(
       labels = label_percent(),
       breaks = breaks_width(0.05)
     ) +
+    scale_color_manual(
+      values = c(
+        "Anthropic" = "#be8bd4ff",
+        "OpenAI" = "#80c8d3ff",
+        "Google" = "#f6e8c3"
+      )
+    ) +
     labs(
       x = "Total Cost (USD)",
-      y = "Percent Correct"
+      y = "Percent Correct",
+      color = "Provider"
     ) +
     theme_light() +
     theme(
@@ -127,7 +167,9 @@ plot_cost_vs_performance <- function(summary_data) {
       plot.margin = margin(10, 10, 20, 10),
       axis.title = element_text(size = 14),
       title = element_text(size = 16),
-      axis.text = element_text(size = 12)
+      axis.text = element_text(size = 12),
+      legend.position = "bottom",
+      legend.text = element_text(size = 12)
     )
 }
 
