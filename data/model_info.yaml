@@ -132,7 +132,7 @@ models:
     input_price: 1.25
     output_price: 10.00
 
-  - name: "Gemini 3"
+  - name: "Gemini 3 Pro"
     model_id: "gemini_3"
     provider: "Google"
     release_date: "2025-11-18"
