@@ -10,5 +10,5 @@ This app displays evaluation results comparing how well various LLMs generate R 
 
 ## Resources
 
-- [Read the full blog post about R code generation](https://posit.co/blog/r-llm-evaluation-02/)
+- [Read the blog post](https://posit.co/blog/r-llm-evaluation-03/)
 - [View the evaluation code on GitHub](https://github.com/skaltman/model-eval-r)
