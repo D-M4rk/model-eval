@@ -124,7 +124,7 @@ plot_cost_vs_performance <- function(summary_data) {
 
   # Adjust min.segment.length based on number of models
   n_models <- nrow(plot_data)
-  min_seg_length <- if_else(n_models < 10, 2, 0.5)
+  min_seg_length <- if_else(n_models < 10, 1.2, 0.5)
 
   ggplot(plot_data, aes(price, percent_correct, color = provider)) +
     geom_point(size = 5) +
