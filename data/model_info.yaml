@@ -138,3 +138,17 @@ models:
     release_date: "2025-11-18"
     input_price: 2.00
     output_price: 12.00
+
+  - name: "GPT-5.2 Pro"
+    model_id: "gpt_5_2_pro"
+    provider: "OpenAI"
+    release_date: "2025-12-11"
+    input_price: 21
+    output_price: 168
+
+  - name: "GPT-5.2"
+    model_id: "gpt_5_2"
+    provider: "OpenAI"
+    release_date: "2025-12-11"
+    input_price: 1.75
+    output_price: 14

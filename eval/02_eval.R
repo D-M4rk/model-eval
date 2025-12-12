@@ -44,3 +44,15 @@ model_eval(
   model = "google_gemini/gemini-2.5-pro",
   filename = "gemini_2_5"
 )
+
+# GPT-5.2 Pro
+model_eval(
+  model = "openai/gpt-5.2-pro",
+  filename = "gpt_5_2_pro"
+)
+
+# GPT-5.2 (Thinking)
+model_eval(
+  model = "openai/gpt-5.2",
+  filename = "gpt_5_2"
+)
