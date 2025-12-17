@@ -40,10 +40,27 @@ jobs:
                             "forcats", "readr", "here"))
         shell: Rscript {0}
 
+      - name: Verify data file exists
+        run: |
+          if [ ! -f "data/data_combined.rds" ]; then
+            echo "Error: data/data_combined.rds not found!"
+            exit 1
+          fi
+          echo "✓ Data file found"
+          ls -lh data/data_combined.rds
+
       - name: Export to Shinylive
         run: |
           shinylive::export(".", "_site")
         shell: Rscript {0}
+
+      - name: List generated files
+        run: |
+          echo "Contents of _site directory:"
+          ls -la _site/
+          echo ""
+          echo "Checking for index.html:"
+          ls -l _site/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
