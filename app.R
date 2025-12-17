@@ -1,4 +1,6 @@
 # `are` eval results Shiny app
+# R Code Generation: LLM Performance Evaluation
+# Author: Mark Dippold
 
 library(shiny)
 library(bslib)
@@ -71,7 +73,7 @@ checkbox_ui <- available_models_with_provider |>
 # UI -------------------------------------------------------------------------
 
 ui <- page_navbar(
-  title = "How well do LLMs generate R code?",
+  title = "R Code Generation: LLM Performance Evaluation",
   id = "main_nav",
 
   nav_panel(
@@ -152,7 +154,7 @@ ui <- page_navbar(
   nav_item(
     tags$a(
       shiny::icon("github", style = "font-size: 1.5em;"),
-      href = "https://github.com/skaltman/model-eval",
+      href = "https://github.com/D-M4rk/model-eval",
       target = "_blank"
     )
   )

@@ -8,7 +8,25 @@ This app displays evaluation results comparing how well various LLMs generate R 
 
 - Each model's solution was scored by Claude 3.7 Sonnet as either Incorrect, Partially Correct, or Correct.
 
-## Resources
+## Using LLMs for R Programming
 
-- [Read the blog post](https://posit.co/blog/r-llm-evaluation-03/)
-- [View the evaluation code on GitHub](https://github.com/skaltman/model-eval-r)
+LLMs can be powerful tools for R programming tasks:
+
+- **Code Generation**: Generate R code from natural language descriptions
+- **Debugging**: Help identify and fix errors in existing code
+- **Package Discovery**: Find appropriate packages for specific tasks
+- **Best Practices**: Learn idiomatic R patterns and tidyverse approaches
+
+## Resources for R + LLMs
+
+- [ellmer package](https://ellmer.tidyverse.org/) - Connect to LLMs from R
+- [vitals package](https://vitals.tidyverse.org/) - Evaluate LLM code generation
+- [are dataset](https://vitals.tidyverse.org/reference/are.html) - Challenging R coding problems for evaluation
+
+## About This Project
+
+**Author**: Mark Dippold
+
+**Repository**: [github.com/D-M4rk/model-eval](https://github.com/D-M4rk/model-eval)
+
+This evaluation helps R users understand which LLMs perform best for R code generation tasks, enabling more informed choices when selecting AI coding assistants.

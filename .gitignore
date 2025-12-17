@@ -62,6 +62,7 @@ logs/
 
 # RDS and RDA files (except app data)
 !data/app_data.rds
+!data/data_combined.rds
 *.rds
 *.rda
 
@@ -70,3 +71,5 @@ renv/library/
 renv/staging/
 renv/local/
 
+# Shinylive build output
+_site/
