@@ -141,6 +141,19 @@ ui <- page_navbar(
   ),
 
   nav_panel(
+    "Best Practices",
+    layout_columns(
+      col_widths = c(2, 8, 2),
+      NULL,
+      div(
+        style = "padding-top: 20px;",
+        includeMarkdown("guide.md")
+      ),
+      NULL
+    )
+  ),
+
+  nav_panel(
     "About",
     layout_columns(
       col_widths = c(2, 8, 2),

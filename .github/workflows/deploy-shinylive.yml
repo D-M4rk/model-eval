@@ -45,6 +45,7 @@ jobs:
           mkdir -p shinylive_app/R shinylive_app/data
           cp app.R shinylive_app/
           cp about.md shinylive_app/
+          cp guide.md shinylive_app/
           cp R/helpers.R shinylive_app/R/
           cp data/data_combined.rds shinylive_app/data/
 
