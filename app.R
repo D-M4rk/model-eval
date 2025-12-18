@@ -2,6 +2,11 @@
 # R Code Generation: LLM Performance Evaluation
 # Author: Mark Dippold
 
+# Workaround for webR dependency issue
+if (!requireNamespace("munsell", quietly = TRUE)) {
+  try(webr::install("munsell"), silent = TRUE)
+}
+
 library(shiny)
 library(bslib)
 library(gt)
@@ -132,6 +137,19 @@ ui <- page_navbar(
           )
         )
       )
+    )
+  ),
+
+  nav_panel(
+    "Best Practices",
+    layout_columns(
+      col_widths = c(2, 8, 2),
+      NULL,
+      div(
+        style = "padding-top: 20px;",
+        includeMarkdown("guide.md")
+      ),
+      NULL
     )
   ),
 
