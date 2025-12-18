@@ -1,6 +1,6 @@
 # R Code Generation: LLM Performance Evaluation
 
-**Author**: Mark Dippold
+**Author**: Mark Dippold based on work from Sara Altman and Simon Couch
 
 This repository evaluates how well different AI models generate R code. The evaluation uses the `are` (**A**n **R** **E**val) dataset from the [vitals package](https://vitals.tidyverse.org/), which contains challenging R coding problems and solutions.
 

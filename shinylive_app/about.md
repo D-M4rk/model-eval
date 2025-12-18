@@ -25,7 +25,7 @@ LLMs can be powerful tools for R programming tasks:
 
 ## About This Project
 
-**Author**: Mark Dippold
+**Author**: Mark Dippold based on work from Sara Altman and Simon Couch
 
 **Repository**: [github.com/D-M4rk/model-eval](https://github.com/D-M4rk/model-eval)
 
