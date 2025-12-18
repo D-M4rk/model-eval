@@ -7,9 +7,12 @@ Large Language Models (LLMs) can significantly enhance your R programming workfl
 ### Key R Packages for LLM Integration
 
 - **[ellmer](https://ellmer.tidyverse.org/)** - Connect to various LLM providers (OpenAI, Anthropic, Google) from R
-- **[elmer](https://elmer.tidyverse.org/)** - Higher-level interface for chat-based interactions
 - **[httr2](https://httr2.r-lib.org/)** - Make direct API calls to LLM services
 - **[chattr](https://mlverse.github.io/chattr/)** - RStudio addin for interactive AI assistance
+
+### Next gen IDE for LLM Integration
+
+- **[Positron](https://positron.posit.co/)** - Built in connections to various LLM providers (Less control, easier to use)
 
 ### Effective Prompting for R Code Generation
 

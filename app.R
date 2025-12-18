@@ -1,6 +1,6 @@
 # `are` eval results Shiny app
 # R Code Generation: LLM Performance Evaluation
-# Author: Mark Dippold
+# Author: Mark Dippold based on work from Sara Altman and Simon Couch
 
 # Workaround for webR dependency issue
 if (!requireNamespace("munsell", quietly = TRUE)) {
